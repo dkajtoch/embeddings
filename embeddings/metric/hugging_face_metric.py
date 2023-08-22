@@ -29,11 +29,14 @@ class HuggingFaceMetric(Metric[HF_metric_input, Dict[Any, Any]]):
     def compute(
         self, y_true: Optional[HF_metric_input], y_pred: Optional[HF_metric_input], **kwargs: Any
     ) -> Dict[Any, Any]:
-        result = self.metric.compute(
-            references=y_true, predictions=y_pred, **self.compute_kwargs, **kwargs
-        )
-        assert isinstance(result, Dict)
-        return result
+        try:
+            result = self.metric.compute(
+                references=y_true, predictions=y_pred, **self.compute_kwargs, **kwargs
+            )
+            assert isinstance(result, Dict)
+            return result
+        except (AttributeError, ValueError):
+            return {self.metric.name: -1.0}
 
     def __str__(self) -> str:
         compute_kwargs_str = "__".join(f"{k}_{v}" for k, v in self.compute_kwargs.items())

@@ -61,7 +61,7 @@ class HuggingFaceLightningModule(LightningModule[AutoModel], abc.ABC):
             **self.config_kwargs,
         )
         self.model: AutoModel = self.downstream_model_type.from_pretrained(
-            self.hparams["model_name_or_path"], config=self.config
+            self.hparams["model_name_or_path"], ignore_mismatched_sizes=True, config=self.config
         )
         if isinstance(self.model_compile_kwargs, dict):
             self.model = torch.compile(self.model, **self.model_compile_kwargs)

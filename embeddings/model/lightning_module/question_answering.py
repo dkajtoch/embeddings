@@ -20,7 +20,9 @@ QA_GOLD_ANSWER_TYPE = Dict[str, Union[Dict[str, Union[List[str], List[Any]]], st
 class QuestionAnsweringInferenceModule(pl.LightningModule):
     def __init__(self, model_name: str, devices: str = "auto", accelerator: str = "auto") -> None:
         super().__init__()
-        self.model = AutoModelForQuestionAnswering.from_pretrained(model_name)
+        self.model = AutoModelForQuestionAnswering.from_pretrained(
+            model_name, ignore_mismatched_sizes=True
+        )
         self.trainer = pl.Trainer(devices=devices, accelerator=accelerator)
 
     def predict_step(
@@ -78,7 +80,7 @@ class QuestionAnsweringModule(LightningModule[AutoModelForQuestionAnswering]):
             **self.config_kwargs,
         )
         self.model: AutoModel = self.downstream_model_type.from_pretrained(
-            self.hparams.model_name_or_path, config=self.config  # type: ignore[union-attr]
+            self.hparams.model_name_or_path, ignore_mismatched_sizes=True, config=self.config  # type: ignore[union-attr]
         )
         if isinstance(self.model_compile_kwargs, dict):
             self.model = torch.compile(self.model, **self.model_compile_kwargs)

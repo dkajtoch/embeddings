@@ -67,12 +67,15 @@ class TextClassificationEvaluationResults(EvaluationResults):
     accuracy: float
     f1_macro: float
     f1_micro: float
+    f1_binary: float
     f1_weighted: float
     recall_macro: float
     recall_micro: float
+    recall_binary: float
     recall_weighted: float
     precision_macro: float
     precision_micro: float
+    precision_binary: float
     precision_weighted: float
     classes: Dict[str, Dict[str, Union[float, int]]]
     data: Optional[Data] = None

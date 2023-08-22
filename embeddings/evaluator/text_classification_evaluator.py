@@ -20,12 +20,17 @@ class TextClassificationEvaluator(
             "accuracy": HuggingFaceMetric("accuracy"),
             "f1_macro": HuggingFaceMetric("f1", compute_kwargs={"average": "macro"}),
             "f1_micro": HuggingFaceMetric("f1", compute_kwargs={"average": "micro"}),
+            "f1_binary": HuggingFaceMetric("f1", compute_kwargs={"average": "binary"}),
             "f1_weighted": HuggingFaceMetric("f1", compute_kwargs={"average": "weighted"}),
             "recall_macro": HuggingFaceMetric("recall", compute_kwargs={"average": "macro"}),
             "recall_micro": HuggingFaceMetric("recall", compute_kwargs={"average": "micro"}),
+            "recall_binary": HuggingFaceMetric("recall", compute_kwargs={"average": "binary"}),
             "recall_weighted": HuggingFaceMetric("recall", compute_kwargs={"average": "weighted"}),
             "precision_macro": HuggingFaceMetric("precision", compute_kwargs={"average": "macro"}),
             "precision_micro": HuggingFaceMetric("precision", compute_kwargs={"average": "micro"}),
+            "precision_binary": HuggingFaceMetric(
+                "precision", compute_kwargs={"average": "binary"}
+            ),
             "precision_weighted": HuggingFaceMetric(
                 "precision", compute_kwargs={"average": "weighted"}
             ),
