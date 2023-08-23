@@ -129,7 +129,7 @@ class LightningModule(pl.LightningModule, abc.ABC, Generic[Model]):
     @no_type_check  # torchmetric use weird types, so we just ignore the whole function
     def get_default_metrics(self) -> MetricCollection:
         assert isinstance(self.hparams, dict)
-        num_labels = self.hparams["num_labels"]
+        num_labels = self.hparams["num_classes"]
         metric_collection: Dict[str, Metric] = {}
         for metric, name in [
             (F1Score, "f1"),
