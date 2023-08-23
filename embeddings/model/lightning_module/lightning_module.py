@@ -1,7 +1,7 @@
 import abc
 import inspect
 from inspect import signature
-from typing import Any, Dict, Generic, List, Literal, Optional, Tuple, TypeVar
+from typing import Any, Dict, Generic, List, Optional, Tuple, TypeVar, no_type_check
 
 import numpy as np
 import pytorch_lightning as pl
@@ -12,7 +12,7 @@ from pytorch_lightning.utilities.types import _PREDICT_OUTPUT, STEP_OUTPUT
 from torch.nn.functional import softmax
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader
-from torchmetrics import Accuracy, F1Score, MetricCollection, Precision, Recall
+from torchmetrics import Accuracy, F1Score, Metric, MetricCollection, Precision, Recall
 from transformers import get_linear_schedule_with_warmup
 
 from embeddings.data.datamodule import HuggingFaceDataset
@@ -126,28 +126,26 @@ class LightningModule(pl.LightningModule, abc.ABC, Generic[Model]):
         self.val_metrics = self.metrics.clone(prefix="val/")
         self.test_metrics = self.metrics.clone(prefix="test/")
 
+    @no_type_check  # torchmetric use weird types, so we just ignore the whole function
     def get_default_metrics(self) -> MetricCollection:
         assert isinstance(self.hparams, dict)
-
-        task: Literal["multiclass", "binary"] = (
-            "multiclass" if self.hparams["num_classes"] > 2 else "binary"
-        )
-
-        # Accuracy, Precision etc. no longer inherits from Metric subclass as it is helper class
-        return MetricCollection(
-            [
-                Accuracy(num_classes=self.hparams["num_classes"], task=task),  # type: ignore[list-item]
-                Precision(
-                    num_classes=self.hparams["num_classes"], average="macro", task=task
-                ),  # type: ignore[list-item]
-                Recall(
-                    num_classes=self.hparams["num_classes"], average="macro", task=task
-                ),  # type: ignore[list-item]
-                F1Score(
-                    num_classes=self.hparams["num_classes"], average="macro", task=task
-                ),  # type: ignore[list-item]
-            ]
-        )
+        num_labels = self.hparams["num_labels"]
+        metric_collection: Dict[str, Metric] = {}
+        for metric, name in [
+            (F1Score, "f1"),
+            (Precision, "precision"),
+            (Recall, "recall"),
+        ]:
+            if num_labels <= 2:
+                metric_collection[name + "_binary"] = metric(task="binary", num_classes=num_labels)
+            for avg in ["micro", "macro"]:
+                metric_collection[name + f"_{avg}"] = metric(
+                    task="multiclass", num_classes=num_labels, average=avg
+                )
+        metric_collection["acc"] = Accuracy(task="multiclass", num_classes=num_labels)
+        if num_labels <= 2:
+            metric_collection["acc_binary"] = Accuracy(task="binary", num_classes=num_labels)
+        return MetricCollection(metric_collection)
 
     def configure_optimizers(self) -> Tuple[List[Optimizer], List[Any]]:
         """Prepare optimizer and schedule (linear warmup and decay)"""
