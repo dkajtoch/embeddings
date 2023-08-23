@@ -45,8 +45,8 @@ class TextClassificationModule(HuggingFaceLightningModule):
     def training_step(self, *args: Any, **kwargs: Any) -> STEP_OUTPUT:
         assert isinstance(self.hparams, dict)
         batch, batch_idx = args
-        loss, logits, _ = self.shared_step(**batch)
-        self.train_metrics(logits, batch["labels"])
+        loss, _, preds = self.shared_step(**batch)
+        self.train_metrics(preds, batch["labels"])
         self.log("train/Loss", loss)
         if self.hparams["use_scheduler"]:
             assert self.trainer is not None
@@ -57,16 +57,16 @@ class TextClassificationModule(HuggingFaceLightningModule):
 
     def validation_step(self, *args: Any, **kwargs: Any) -> Optional[STEP_OUTPUT]:
         batch, batch_idx = args
-        loss, logits, _ = self.shared_step(**batch)
-        self.val_metrics.update(logits, batch["labels"])
+        loss, _, preds = self.shared_step(**batch)
+        self.val_metrics.update(preds, batch["labels"])
         self.log("val/Loss", loss, on_epoch=True)
         return None
 
     def test_step(self, *args: Any, **kwargs: Any) -> Optional[STEP_OUTPUT]:
         batch, batch_idx = args
-        loss, logits, _ = self.shared_step(**batch)
+        loss, _, preds = self.shared_step(**batch)
         if -1 not in batch["labels"]:
-            self.test_metrics.update(logits, batch["labels"])
+            self.test_metrics.update(preds, batch["labels"])
             self.log("test/Loss", loss, on_epoch=True)
         else:
             _logger.warning("Missing labels for the test data")
